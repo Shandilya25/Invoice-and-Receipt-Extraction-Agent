@@ -199,7 +199,8 @@ def main() -> None:
         print("downloaded", name)
 
     # Robustness variants of real receipts (same labels as the source image)
-    # (SROIE row 6 is used only blurred, so it can't be a duplicate of another eval case)
+    # (SROIE rows 6 and 2 are used only in these altered forms, so they can't be
+    # duplicates of another eval case)
     sroie_6 = download_row("arvindrajan92/sroie_document_understanding", "train", 6)
     sroie_6.filter(ImageFilter.GaussianBlur(1.2)).save(
         OUT / "variant_blur_mild_sroie_6.jpg", quality=92
@@ -207,9 +208,8 @@ def main() -> None:
     Image.open(OUT / "sroie_7.jpg").filter(ImageFilter.GaussianBlur(4)).save(
         OUT / "variant_blur_heavy_sroie_7.jpg", quality=92
     )
-    Image.open(OUT / "sroie_10.jpg").rotate(90, expand=True).save(
-        OUT / "variant_rotated_sroie_10.jpg", quality=92
-    )
+    sroie_2 = download_row("arvindrajan92/sroie_document_understanding", "train", 2)
+    sroie_2.rotate(90, expand=True).save(OUT / "variant_rotated_sroie_2.jpg", quality=92)
     shutil.copyfile(OUT / "sroie_0.jpg", OUT / "variant_duplicate_sroie_0.jpg")  # same bytes
 
     make_synthetic()
