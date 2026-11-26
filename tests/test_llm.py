@@ -3,7 +3,7 @@
 import json
 from types import SimpleNamespace as NS
 
-import httpx
+import httpx2  # the HTTP library used by openai 3.x
 import openai
 import pytest
 
@@ -40,7 +40,7 @@ def traces(tmp_path, monkeypatch):
 
 
 def test_falls_back_to_secondary_provider(monkeypatch, traces):
-    down = openai.APIConnectionError(request=httpx.Request("POST", "https://x"))
+    down = openai.APIConnectionError(request=httpx2.Request("POST", "https://x"))
     clients = {"groq": FakeClient(down), "gemini": FakeClient(fake_response("hi"))}
     monkeypatch.setattr(llm, "_client_for", lambda name: clients[name])
 
@@ -54,7 +54,7 @@ def test_falls_back_to_secondary_provider(monkeypatch, traces):
 
 
 def test_all_providers_down_raises(monkeypatch, traces):
-    down = openai.APIConnectionError(request=httpx.Request("POST", "https://x"))
+    down = openai.APIConnectionError(request=httpx2.Request("POST", "https://x"))
     monkeypatch.setattr(llm, "_client_for", lambda name: FakeClient(down))
     with pytest.raises(llm.LLMUnavailable):
         llm.chat([{"role": "user", "content": "x"}], step="test")

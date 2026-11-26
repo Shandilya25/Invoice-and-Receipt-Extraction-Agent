@@ -8,7 +8,7 @@ addopts = "-q --basetemp=.pytest_tmp"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-extend-exclude = [".venv", "data/raw"]
+extend-exclude = [".venv*", "data/raw"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
