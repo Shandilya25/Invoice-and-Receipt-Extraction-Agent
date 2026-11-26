@@ -33,6 +33,7 @@ FILE_TYPES = ["jpg", "jpeg", "png", "webp", "pdf"]
 
 from agent.agent import Agent  # noqa: E402 - imported after the environment is set up
 from agent.mcp_client import MCPToolClient  # noqa: E402
+from core.llm import PROVIDERS, LLMUnavailable  # noqa: E402
 from core.store import Store  # noqa: E402
 
 
@@ -62,6 +63,8 @@ def send(text: str, files: list[tuple[str, bytes]]) -> None:
     with st.spinner("Reading the document and checking it (usually 5-20 s)..."):
         try:
             answer = agent.reply(st.session_state.session_id, text)
+        except LLMUnavailable as e:  # message names providers and error types only, no secrets
+            answer = f"The language model is unavailable right now: {e}"
         except Exception as e:  # noqa: BLE001 - safe message; details are in the traces
             answer = f"Sorry, something went wrong ({type(e).__name__}). Please try again."
     st.session_state.chat.append({"role": "assistant", "content": answer})
@@ -110,7 +113,8 @@ st.caption(
     "Upload a receipt or invoice (photo or PDF). Clean records are posted to the ledger; "
     "doubtful ones go to the review queue. You can correct a field in chat, e.g. "
     '*"the vendor is Kedai Kopi Maju"*.  \n'
-    f"Session id: `{st.session_state.session_id}`"
+    f"Session id: `{st.session_state.session_id}` · API keys found: "
+    + ", ".join(f"{p.name} {'✅' if os.getenv(p.key_env) else '❌'}" for p in PROVIDERS)
 )
 
 left, right = st.columns([3, 2], gap="large")
