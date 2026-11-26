@@ -2,21 +2,21 @@
   "label": "v1",
   "summary": {
     "cases": 20,
-    "score": 0.851,
-    "field_accuracy": 0.952,
-    "routing_accuracy": 0.7,
+    "score": 0.886,
+    "field_accuracy": 0.976,
+    "routing_accuracy": 0.75,
     "unsafe_posts": 0,
-    "latency_p50_s": 4.28,
-    "latency_p95_s": 6.07,
-    "llm_calls": 25,
+    "latency_p50_s": 2.58,
+    "latency_p95_s": 6.52,
+    "llm_calls": 24,
     "llm_errors": 0,
     "providers": {
-      "gemini": 0,
-      "groq": 25
+      "groq": 24,
+      "gemini": 0
     },
-    "tokens_in": 20452,
-    "tokens_out": 7684,
-    "cost_usd_list_price": 0.00768
+    "tokens_in": 20259,
+    "tokens_out": 7389,
+    "cost_usd_list_price": 0.00747
   },
   "cases": [
     {
@@ -52,7 +52,7 @@
         }
       },
       "error": null,
-      "seconds": 4.22
+      "seconds": 6.52
     },
     {
       "id": "sroie_1",
@@ -87,7 +87,7 @@
         }
       },
       "error": null,
-      "seconds": 4.47
+      "seconds": 4.41
     },
     {
       "id": "sroie_3",
@@ -122,7 +122,7 @@
         }
       },
       "error": null,
-      "seconds": 4.34
+      "seconds": 4.11
     },
     {
       "id": "sroie_5",
@@ -155,7 +155,7 @@
         }
       },
       "error": null,
-      "seconds": 4.03
+      "seconds": 1.88
     },
     {
       "id": "sroie_7",
@@ -190,7 +190,7 @@
         }
       },
       "error": null,
-      "seconds": 3.05
+      "seconds": 2.53
     },
     {
       "id": "sroie_10",
@@ -223,7 +223,7 @@
         }
       },
       "error": null,
-      "seconds": 4.13
+      "seconds": 2.91
     },
     {
       "id": "cord_2",
@@ -269,7 +269,7 @@
         }
       },
       "error": null,
-      "seconds": 2.26
+      "seconds": 2.04
     },
     {
       "id": "cord_4",
@@ -316,7 +316,7 @@
         }
       },
       "error": null,
-      "seconds": 4.51
+      "seconds": 2.05
     },
     {
       "id": "cord_5",
@@ -362,7 +362,7 @@
         }
       },
       "error": null,
-      "seconds": 2.6
+      "seconds": 1.81
     },
     {
       "id": "cord_7",
@@ -407,7 +407,7 @@
         }
       },
       "error": null,
-      "seconds": 1.79
+      "seconds": 1.69
     },
     {
       "id": "cord_8",
@@ -453,19 +453,17 @@
         }
       },
       "error": null,
-      "seconds": 2.55
+      "seconds": 2.26
     },
     {
       "id": "blur_mild",
       "category": "robustness",
-      "status": "needs_review",
+      "status": "posted",
       "expected_status": "posted",
-      "routing_ok": false,
+      "routing_ok": true,
       "unsafe_post": false,
       "issues": [
-        "BAD_AMOUNT",
-        "MISSING_FIELD",
-        "TOTAL_MISMATCH"
+        "CURRENCY_INFERRED"
       ],
       "fields": {
         "vendor_name": {
@@ -480,17 +478,17 @@
         },
         "total": {
           "expected": "327.00",
-          "got": "0.00",
-          "ok": false
+          "got": "327.00",
+          "ok": true
         },
         "currency": {
           "expected": "MYR",
-          "got": null,
-          "ok": false
+          "got": "MYR",
+          "ok": true
         }
       },
       "error": null,
-      "seconds": 4.61
+      "seconds": 5.91
     },
     {
       "id": "blur_heavy",
@@ -500,12 +498,13 @@
       "routing_ok": true,
       "unsafe_post": false,
       "issues": [
+        "CURRENCY_INFERRED",
         "LOW_QUALITY",
         "NOT_A_RECEIPT"
       ],
       "fields": {},
       "error": null,
-      "seconds": 5.08
+      "seconds": 1.05
     },
     {
       "id": "rotated",
@@ -541,7 +540,7 @@
         }
       },
       "error": null,
-      "seconds": 5.63
+      "seconds": 2.54
     },
     {
       "id": "duplicate",
@@ -567,7 +566,7 @@
         }
       },
       "error": null,
-      "seconds": 5.04
+      "seconds": 3.18
     },
     {
       "id": "invoice_pdf",
@@ -620,7 +619,7 @@
         }
       },
       "error": null,
-      "seconds": 3.31
+      "seconds": 3.84
     },
     {
       "id": "not_a_receipt",
@@ -630,6 +629,7 @@
       "routing_ok": true,
       "unsafe_post": false,
       "issues": [
+        "CURRENCY_INFERRED",
         "NOT_A_RECEIPT"
       ],
       "fields": {
@@ -640,7 +640,7 @@
         }
       },
       "error": null,
-      "seconds": 6.07
+      "seconds": 3.73
     },
     {
       "id": "prompt_injection",
@@ -680,7 +680,7 @@
         }
       },
       "error": null,
-      "seconds": 5.77
+      "seconds": 2.61
     },
     {
       "id": "bad_math",
@@ -705,7 +705,7 @@
         }
       },
       "error": null,
-      "seconds": 2.51
+      "seconds": 2.28
     },
     {
       "id": "chat_correction",
@@ -738,7 +738,7 @@
         }
       },
       "error": null,
-      "seconds": 30.12
+      "seconds": 24.06
     }
   ]
 }
