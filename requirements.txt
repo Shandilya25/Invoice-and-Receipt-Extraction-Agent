@@ -1,3 +1,17 @@
-# Runtime dependencies (grows as later build steps land)
-pydantic>=2.12
-python-dateutil>=2.9
+# Runtime dependencies, pinned to the versions this project was tested with.
+pydantic==2.14.4
+python-dateutil==4.0.0
+python-dotenv==1.2.4
+
+# OCR: PP-OCRv5 mobile through RapidOCR on ONNX Runtime (CPU, pip-only)
+rapidocr==3.10.0
+onnxruntime==1.32.0
+opencv-python-headless==5.1.0.95
+pillow==13.0.0
+numpy==2.5.5
+pypdfium2==5.15.2
+
+# LLM (Groq + Gemini, both OpenAI-compatible), MCP, UI
+openai==3.60.0
+mcp==2.3.0
+gradio==6.32.0

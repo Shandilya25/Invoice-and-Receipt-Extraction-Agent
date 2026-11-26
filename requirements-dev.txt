@@ -1,3 +1,4 @@
 -r requirements.txt
-pytest>=8
-ruff>=0.8
+pytest==9.2.0
+ruff==0.17.6
+fpdf2==2.9.0  # only used to generate the synthetic invoice PDF for the eval set

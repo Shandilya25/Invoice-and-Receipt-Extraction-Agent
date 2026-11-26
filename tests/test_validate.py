@@ -112,7 +112,7 @@ def test_not_a_receipt_has_no_missing_field_noise():
 def test_duplicate_and_low_quality(myr_raw):
     record = _record(myr_raw)
     ctx = DocumentContext(
-        as_of=date(2018, 6, 1), is_duplicate=True, ocr_confidence=0.4, blur_score=12.0
+        as_of=date(2018, 6, 1), is_duplicate=True, ocr_confidence=0.4, blur_score=5.0
     )
     result = validate_record(record, ctx)
     assert {IssueCode.DUPLICATE, IssueCode.LOW_QUALITY} <= result.codes

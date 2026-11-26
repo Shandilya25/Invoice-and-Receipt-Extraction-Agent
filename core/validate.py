@@ -34,7 +34,9 @@ class ValidationConfig:
     max_tax_rate: Decimal = Decimal("0.30")
     max_age_days: int | None = 730  # None disables (the public datasets are from 2017-2019)
     min_ocr_confidence: float = 0.60  # mean word confidence, 0-1
-    min_blur_score: float = 50.0  # variance of Laplacian; lower = blurrier
+    # Variance of the Laplacian at 800px width. Calibrated on 24 dataset images: originals
+    # scored 22-4187, the same images with a heavy blur scored 1-6.
+    min_blur_score: float = 10.0
     allowed_currencies: frozenset[str] = SUPPORTED_CURRENCIES
 
 
