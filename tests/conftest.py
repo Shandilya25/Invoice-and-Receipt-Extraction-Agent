@@ -107,3 +107,9 @@ def myr_ctx() -> DocumentContext:
 @pytest.fixture
 def no_age_limit() -> ValidationConfig:
     return ValidationConfig(max_age_days=None)
+
+
+@pytest.fixture(autouse=True)
+def _traces_to_tmp(tmp_path, monkeypatch):
+    """Keep test traces out of the real traces/ folder."""
+    monkeypatch.setenv("TRACE_FILE", str(tmp_path / "trace.jsonl"))

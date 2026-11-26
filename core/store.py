@@ -131,6 +131,13 @@ class Store:
     def ledger(self) -> list[dict]:
         return [dict(r) for r in self.db.execute("SELECT * FROM ledger ORDER BY posted_at DESC")]
 
+    def review_queue(self) -> list[dict]:
+        rows = self.db.execute(
+            "SELECT doc_id, file_name, record_json, issues_json, updated_at FROM documents "
+            "WHERE status = 'needs_review' ORDER BY updated_at DESC"
+        )
+        return [dict(r) for r in rows]
+
     # ------------------------------------------------------------------ audit trail
 
     def add_correction(

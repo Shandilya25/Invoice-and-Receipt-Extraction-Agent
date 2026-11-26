@@ -1,0 +1,15 @@
+# Never ship secrets or local state into the image
+.env
+.env.*
+.git
+.venv
+__pycache__/
+.pytest_cache/
+.pytest_tmp/
+.ruff_cache/
+data/
+uploads/
+traces/
+evals/
+tests/
+*.db

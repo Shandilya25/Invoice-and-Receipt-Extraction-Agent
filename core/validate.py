@@ -308,7 +308,9 @@ def _check_injection(r: ReceiptRecord, ctx: DocumentContext) -> list[Issue]:
 _NUMBER_TOKEN = re.compile(r"\d[\d.,]*\d|\d")
 _MONTHS = r"(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?"
 _DATE_CANDIDATES = [
-    re.compile(r"\b\d{1,4}[/\-.]\d{1,2}[/\-.]\d{2,4}\b"),
+    # No trailing \b: OCR often glues the time onto the date ("02/11/202614:05").
+    re.compile(r"\b\d{1,4}[/\-.]\d{1,2}[/\-.]\d{4}"),
+    re.compile(r"\b\d{1,4}[/\-.]\d{1,2}[/\-.]\d{2}\b"),
     re.compile(rf"\b\d{{1,2}}(?:st|nd|rd|th)?[\s\-/]*{_MONTHS}[\s\-/,]*\d{{2,4}}\b", re.I),
     re.compile(rf"\b{_MONTHS}[\s\-/]*\d{{1,2}}(?:st|nd|rd|th)?[\s,\-/]*\d{{2,4}}\b", re.I),
 ]

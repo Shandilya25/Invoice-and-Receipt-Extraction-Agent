@@ -3,7 +3,7 @@
 Both expose an OpenAI-compatible API, so one client library covers both.
 Guardrails here:
   - timeout per request (LLM_TIMEOUT_S, default 30 s)
-  - retries with exponential backoff on 429 / 5xx / timeouts (SDK built-in, 2 retries)
+  - retries with exponential backoff on 429 / 5xx / timeouts (SDK built-in, LLM_MAX_RETRIES)
   - fallback to the secondary provider if the primary still fails
   - every call is traced with latency, tokens and list-price cost
 """
@@ -73,7 +73,8 @@ def _client_for(name: str) -> OpenAI:
         api_key=os.environ[provider.key_env],
         base_url=provider.base_url,
         timeout=float(os.getenv("LLM_TIMEOUT_S", "30")),
-        max_retries=2,
+        # SDK retries 429/5xx/timeouts with exponential backoff, honouring retry-after.
+        max_retries=int(os.getenv("LLM_MAX_RETRIES", "2")),
     )
 
 

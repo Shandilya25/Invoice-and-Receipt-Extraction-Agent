@@ -19,3 +19,6 @@ uploads/
 
 # Full downloaded datasets (only the small curated eval images are committed)
 data/raw/
+
+# Eval scratch space (databases, uploads, traces per run)
+evals/.work/

@@ -160,3 +160,9 @@ def test_chat_correction_flow_from_review_to_clean(myr_raw):
     ctx.verified_fields = frozenset({fix.field})
     after = validate_record(fix.record, ctx)
     assert after.ok, after.issues
+
+
+def test_date_grounding_survives_ocr_gluing_time_onto_date():
+    from core.validate import dates_in_text
+
+    assert date(2026, 11, 2) in dates_in_text("Date: 02/11/202614:05")
