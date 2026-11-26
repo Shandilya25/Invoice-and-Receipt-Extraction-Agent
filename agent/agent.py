@@ -96,15 +96,17 @@ class Agent:
 
 
 def _assistant_turn(msg) -> dict:
-    return {
-        "role": "assistant",
-        "content": msg.content or "",
-        "tool_calls": [
-            {
-                "id": c.id,
-                "type": "function",
-                "function": {"name": c.function.name, "arguments": c.function.arguments},
-            }
-            for c in msg.tool_calls
-        ],
-    }
+    calls = []
+    for c in msg.tool_calls:
+        call = {
+            "id": c.id,
+            "type": "function",
+            "function": {"name": c.function.name, "arguments": c.function.arguments},
+        }
+        # Gemini 3 attaches a thought_signature to each tool call and rejects (400) the next
+        # request unless it is sent back unchanged. Other providers don't set this field.
+        extra = getattr(c, "extra_content", None)
+        if extra:
+            call["extra_content"] = extra
+        calls.append(call)
+    return {"role": "assistant", "content": msg.content or "", "tool_calls": calls}

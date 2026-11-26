@@ -109,3 +109,18 @@ def test_multi_turn_history_is_kept_per_session(store):
     assert second_turn == ["hello", "first answer", "and again"]
     other_session = [m["content"] for m in llm.seen[2] if m["role"] != "system"]
     assert other_session == ["new chat"]
+
+
+def test_gemini_thought_signature_is_sent_back():
+    """Gemini 3 rejects the next request (400) unless each tool call's extra_content is echoed."""
+    from agent.agent import _assistant_turn
+
+    signed = NS(
+        id="c1",
+        function=NS(name="get_document", arguments="{}"),
+        extra_content={"google": {"thought_signature": "abc"}},
+    )
+    plain = NS(id="c2", function=NS(name="get_document", arguments="{}"))
+    turn = _assistant_turn(reply(tool_calls=[signed, plain]))
+    assert turn["tool_calls"][0]["extra_content"] == {"google": {"thought_signature": "abc"}}
+    assert "extra_content" not in turn["tool_calls"][1]  # don't send unknown fields to Groq

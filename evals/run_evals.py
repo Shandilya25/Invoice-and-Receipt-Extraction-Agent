@@ -160,7 +160,11 @@ def run(label: str, min_score: float) -> int:
     try:
         for case in cases:
             start = time.perf_counter()
-            result = score_case(case, run_case(case, tools), time.perf_counter() - start)
+            try:
+                doc = run_case(case, tools)
+            except Exception as e:  # noqa: BLE001 - a crashing case is a failed case, not a dead run
+                doc = {"error": f"{type(e).__name__}: {e}"}
+            result = score_case(case, doc, time.perf_counter() - start)
             results.append(result)
             wrong = [f for f, v in result["fields"].items() if not v["ok"]]
             print(

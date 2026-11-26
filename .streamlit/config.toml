@@ -1,0 +1,5 @@
+[server]
+headless = true      # no first-run email prompt
+
+[browser]
+gatherUsageStats = false
