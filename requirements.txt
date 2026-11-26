@@ -1,0 +1,3 @@
+# Runtime dependencies (grows as later build steps land)
+pydantic>=2.12
+python-dateutil>=2.9
