@@ -32,6 +32,7 @@ ENV DB_PATH=/app/data/app.db \
     UPLOAD_DIR=/app/uploads \
     TRACE_FILE=/app/traces/trace.jsonl \
     DEFAULT_CURRENCY=MYR \
+    GRADIO_SERVER_NAME=0.0.0.0 \
     PORT=7860
 EXPOSE 7860
 CMD ["python", "-m", "app.ui"]

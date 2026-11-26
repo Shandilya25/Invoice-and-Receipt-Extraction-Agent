@@ -1,4 +1,9 @@
-"""Gradio chat UI.  Run:  python -m app.ui   ->  http://localhost:7860
+"""Gradio chat UI.
+
+Run (from the project folder, with the virtual environment's Python):
+    Windows:      .venv\\Scripts\\python -m app.ui
+    Linux/macOS:  .venv/bin/python -m app.ui
+then open http://127.0.0.1:7860
 
 Upload a receipt/invoice (image or PDF) and chat with the agent. Each browser tab gets its
 own session id (shown on the page); the agent keeps that conversation's history.
@@ -122,4 +127,10 @@ with gr.Blocks(title="Receipt Agent") as demo:
 
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=int(os.getenv("PORT", "7860")))
+    # Locally bind to 127.0.0.1 so the printed link opens in a browser. Docker / Hugging Face
+    # set GRADIO_SERVER_NAME=0.0.0.0 to accept outside connections (http://0.0.0.0:7860 is
+    # not a URL a browser can open).
+    host = os.getenv("GRADIO_SERVER_NAME", "127.0.0.1")
+    port = int(os.getenv("PORT", "7860"))
+    print(f"Receipt agent ready: open http://127.0.0.1:{port} in your browser", flush=True)
+    demo.launch(server_name=host, server_port=port)
