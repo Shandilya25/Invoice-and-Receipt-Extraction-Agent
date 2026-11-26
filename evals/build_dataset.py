@@ -126,6 +126,25 @@ def make_synthetic() -> None:
         logo=True,
     )
     make_invoice_pdf(OUT / "synthetic_invoice.pdf")
+    # Demo sample for the UI (not an eval case): a recent, consistent receipt that gets posted
+    draw_receipt(
+        [
+            "KEDAI BUKU CERIA SDN BHD",
+            "NO 21, JALAN CONTOH 5, 40150 SHAH ALAM",
+            "Date: 20/11/2026  11:42",
+            "--------------------------------------------",
+            "NOTEBOOK A5 2 x 3.90	7.80",
+            "BALL PEN BLUE	2.40",
+            "HIGHLIGHTER SET	9.90",
+            "--------------------------------------------",
+            "SUBTOTAL	20.10",
+            "SST 6%	1.21",
+            "TOTAL RM	21.31",
+            "CASH	50.00",
+            "CHANGE	28.69",
+        ],
+        Path("samples/1_clean_receipt.png"),
+    )
 
 
 def make_invoice_pdf(path: Path) -> None:

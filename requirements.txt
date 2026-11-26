@@ -11,7 +11,7 @@ pillow==13.0.0
 numpy==2.5.5
 pypdfium2==5.15.2
 
-# LLM (Groq + Gemini, both OpenAI-compatible), MCP, UI
+# LLM (Groq + Gemini, both OpenAI-compatible), MCP, UI (Streamlit)
 openai==3.60.0
 mcp==2.3.0
-gradio==6.32.0
+streamlit==1.67.0
