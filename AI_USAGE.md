@@ -4,7 +4,7 @@
 
 | Tool | Used for |
 |---|---|
-| **Claude Code** (Claude Opus 5.5, in VS Code) | Planning, writing most of the code, tests and docs, running the evals, and analysing the failures |
+| **Claude Code** (Claude Opus 5.5, in VS Code) | Planning, writing most of the code, tests and docs, running the evals, analysing failures, and preparing the deployment |
 | **GPT-OSS-120B on Groq** | The product's own LLM: extraction and the chat agent (not a coding aid) |
 | **Gemini 3.1 Flash-Lite** | The product's fallback LLM |
 
@@ -13,77 +13,91 @@ for OCR), the scope and the free-tier constraint were made by me, not by the AI.
 
 How AI output was checked:
 
-- Every module has unit tests: 152 tests, no network.
-- The 20-case eval runs the real OCR and LLM end to end.
-- Any eval failure was traced to a root cause in the stored records and OCR text before
-  anything was changed.
-- Dataset labels and the rendered synthetic documents were checked by looking at the images.
+- **Unit tests:** every module has them, 155 tests, no network.
+- **End-to-end eval:** 20 cases with the real OCR and LLM.
+- **Root cause before any change:** every eval failure was traced in the stored record and OCR
+  text before anything was changed.
+- **Images inspected by eye:** dataset labels and the rendered synthetic documents.
+- **Real use:** the app was used locally, and that's how two of the issues below were found.
 
 ## Three things the AI got wrong, and how they were fixed
 
 ### 1. A number-parsing rule that was wrong for Malaysian receipts
 
 **What it did:** Claude wrote a "3 digits after the separator means thousands" rule so that
-Indonesian `60.000` reads as 60000. It applied the rule to every currency. SROIE (Malaysian)
+Indonesian `60.000` reads as 60000, and applied it to every currency. SROIE (Malaysian)
 receipts print unit prices like `9.000`, which became RM 9000, so correct receipts were flagged
-with a false `LINE_MATH` error.
+with a false `LINE_MATH` error. A second bug in the same function turned `.01` into `1.00` and
+ignored Unicode minus signs, so an OCR-mangled rounding of `-0.01` became `-100.00`.
 
-**How it was caught:** the v1 eval run. `sroie_0` and its duplicate went to review. Checking
-the stored record showed `unit_price: 9000.00`.
+**How it was caught:** the v1 eval. Four correct receipts went to review. The stored records
+showed `unit_price: 9000.00` and `rounding: -100.00`, and reproducing the inputs in a small
+script confirmed both bugs.
 
-**Fix:** the currency now decides the format. MYR, SGD, USD, GBP and INR use `.` as the decimal
-point; IDR has no minor unit; the 3-digit rule is only a fallback when the currency is unknown.
-A regression test pins `("9.000", "MYR") -> 9.00`
-(see [`tests/test_normalize.py`](tests/test_normalize.py)).
+**Fix:** the currency now decides the number format; leading dots and Unicode minus signs are
+handled; and a rounding > 1% of the total is treated as an OCR misread. Each case has a
+regression test in [`tests/test_normalize.py`](tests/test_normalize.py).
 
-### 2. Leading-dot and Unicode-minus bugs that turned "-0.01" into "-100.00"
+### 2. A safety metric that missed the worst kind of failure
 
-**What it did:** `parse_amount` stripped separators from *both* ends of a string, so `.01`
-became `01`, which is 1.00. It also ignored Unicode minus signs (`−`, `–`). The OCR misread a
-"-0.01" rounding line as `-001` and `10'0-`, and those became rounding adjustments of
--1.00 and -100.00, which broke the total check on two correct receipts (`sroie_1`,
-`sroie_3`).
+**What it did:** Claude defined "unsafe post" as *posting a record that should have gone to
+review*. In the v1 run, a sideways photo produced garbled OCR whose numbers happened to add
+up, and the record was **posted with the wrong vendor and total**. That is exactly what a
+finance team fears most, and the metric scored it as safe.
 
-**How it was caught:** the v1 eval run. The failing records showed `rounding: -100.00`, and
-reproducing the inputs in a small script showed `parse_amount("-.01") == -1.00`.
+**How it was caught:** reading the per-case results, which showed `rotated: posted, wrong:
+vendor_name, total` while the summary said 0 unsafe posts.
 
-**Fix:** only trailing separators are stripped, a leading dot gets a `0` in front, and
-Unicode minus signs are normalised. Separately, any rounding larger than 1% of the total is
-now treated as an OCR misread: it's ignored, with a non-blocking `IMPLAUSIBLE_VALUE` note.
-That's safe because the total check already tolerates rounding-sized differences.
+**Fix:** an unsafe post is now *any posted record that needed review **or** has a wrong
+value*. The saved v1 run was re-scored (`--rescore v1`, no new LLM calls), and v1 now correctly
+**fails** the CI gate. v2 fixes the cause (sideways pages are detected and re-read).
 
-### 3. An eval case that contradicted the system's own (correct) duplicate detection
+### 3. Wrong assumptions about where the app would run
 
-**What it did:** Claude made the "mild blur" robustness case by blurring `sroie_5`, which was
-also an eval case of its own, and expected the blurred copy to be **posted**. The system flagged
-it as `DUPLICATE`, because it is the same receipt (same vendor, date and total), and that is
-the right behaviour.
+**What it did:**
+- **Unusable start-up link.** The UI bound to `0.0.0.0` and printed `http://0.0.0.0:7860`.
+  That address opens nothing in a browser on Windows, and plain `python` doesn't exist on this
+  machine either, so the documented start command failed. I reported "the app is not working".
+- **Deployment target.** Claude planned the deployment on Hugging Face Spaces from older
+  knowledge. Creating the Docker Space returned `402 Payment Required`, because free Docker and
+  Gradio Spaces now need a PRO plan.
 
-**How it was caught:** the first baseline run. The case failed for the "wrong" reason, so the
-expectation was wrong, not the agent.
+**How it was caught:** by actually running the app, and by the deploy call itself.
 
-**Fix:** the blur case now uses a receipt (SROIE row 6) that appears nowhere else in the set,
-and the v1 baseline was **re-run on the corrected set** before any code changes, so the
-before/after comparison uses identical cases.
+**Fix:**
+- The app now binds to `127.0.0.1` locally and prints a working link, and the README gives the
+  venv commands for Windows.
+- Deployment moved to **Streamlit Community Cloud** (free, and on the brief's list). Render's
+  free 512 MB was rejected as too small for the OCR model.
+- Before deploying, the pinned requirements were checked on PyPI for Python 3.12 Linux wheels,
+  and the whole demo flow was tested headlessly with Streamlit's `AppTest`.
 
-## Smaller mistakes also caught
+## Other mistakes caught along the way
 
-- **Guessed threshold.** The image-sharpness threshold started as a guess (50). Measuring 24
-  real images showed a perfectly readable CORD photo scoring 22, so it was calibrated to 10.
-  The same measurement showed that mean OCR confidence is a poor quality signal: heavily
-  blurred images still averaged 0.9 or more.
-- **Grounding vs. corrections.** The first validation design would have rejected the user's
-  chat correction: the OCR text contains the *misread* value, so a corrected value can't be
-  "found" in it. This was caught while writing the test for the chat scenario, and fixed by
-  letting human-verified fields skip grounding.
-- **A limitation instead of a fix.** A test first documented `0.535` being read as 535 as a
-  "known limitation". It was fixed properly instead: a leading `0` can't be a thousands group.
-- **Date regex.** The date regex needed a word boundary after the year, but OCR often glues the
-  time on (`02/11/202614:05`), so the grounding check missed real dates. Caught by OCR-ing the
-  synthetic receipts.
-- **Outdated API knowledge.** The installed MCP SDK is 2.x, where `FastMCP` was renamed and
-  exception messages are hidden from the model by default. The code was written against the
-  installed package (read from source) rather than from memory, and anticipated errors use
-  `ToolError` so the agent can read them.
-- **Trivial bugs, each caught by the first run:** `lru_cache` on an unhashable dataclass, and a
-  keyword clash in the tracing helper.
+- **Eval cases that tested two things at once.** The "mild blur" and "rotated" cases used
+  altered copies of receipts that were also cases themselves, so once the agent read them
+  correctly it rightly flagged them as `DUPLICATE`. Each now has its own receipt. Both
+  versions were re-run on the identical corrected set.
+- **An improvement that didn't improve.** Claude proposed a "self-check" re-read for
+  arithmetic failures. The v2 eval showed it ran 4 times and never helped, while adding
+  latency. It's reported as such in [EVAL_REPORT.md](EVAL_REPORT.md) instead of being credited.
+- **A fallback that didn't actually work for chat.** The Gemini fallback was only ever tested
+  on single extraction calls. Running the whole eval on Gemini showed that the chat agent's
+  second request failed with `400`: Gemini 3 attaches a `thought_signature` to each tool call
+  and requires it to be sent back, and the agent was rebuilding tool calls without it. Fixed,
+  with a regression test (`test_gemini_thought_signature_is_sent_back`). The eval runner also
+  now records a crashing case as a failure instead of aborting the whole run.
+- **Guessed threshold.** The image-sharpness threshold started as a guess (50); a readable CORD
+  photo scored 22. It was calibrated on 24 real images to 10. The same measurement showed that
+  mean OCR confidence is useless as a quality signal: heavily blurred images still averaged 0.9
+  or more.
+- **Grounding vs. corrections.** The first validation design would have rejected a user's chat
+  correction, because the OCR text contains the *misread* value. Fixed by letting
+  human-verified fields skip grounding.
+- **Date regex.** It required a word boundary after the year, but OCR often glues the time on
+  (`02/11/202614:05`).
+- **Outdated library knowledge.** The installed MCP SDK is 2.x (`FastMCP` renamed, exception
+  messages hidden from the model by default). The code was written against the installed
+  package, read from source, rather than from memory.
+- **Blocked dependency.** `fpdf2` couldn't load on this machine (a Windows Application Control
+  policy blocked a DLL), so the test invoice PDF is now written directly in PDF syntax.

@@ -4,14 +4,19 @@
 
 | Step | What | Status |
 |---|---|---|
-| 1 | Schema, normalisers, validators, corrections, PII masking, injection detection + unit tests | **Done** (117 tests) |
-| 2 | OCR + preprocessing; pick 20 eval images, make variants, write case JSON files | Next |
-| 3 | MCP server + SQLite (documents, records, corrections, ledger, review queue, sessions) | |
-| 4 | Agent loop, LLM adapter, session memory, guardrails, tracing | |
-| 5 | v1 baseline eval run | |
-| 6 | Improvements, then v2 run and before/after table | |
-| 7 | Injection eval case, PII-masked traces, gitleaks | |
-| 8 | Gradio UI, Dockerfile, CI, HF Spaces deploy, README with results + demo | |
+| 1 | Schema, normalisers, validators, corrections, PII masking, injection detection + tests | Done |
+| 2 | OCR (PP-OCRv5 mobile), eval set of 20 cases (SROIE, CORD, FUNSD, variants, synthetic) | Done |
+| 3 | MCP server + SQLite (documents, corrections, ledger, review queue, sessions) | Done |
+| 4 | Agent loop, LLM client (Groq + Gemini fallback), guardrails, tracing | Done |
+| 5 | v1 baseline eval | Done: score 0.899, 1 unsafe post (gate fails) |
+| 6 | Improvements, v2 eval, before/after | Done: score 0.933, 0 unsafe posts |
+| 7 | Security tests (injection), PII-masked traces, gitleaks in CI | Done |
+| 8 | Streamlit UI, Dockerfile, CI, Streamlit Community Cloud deploy, docs | Done |
+
+The sections below are the original plan. Where the build differs, the README and DESIGN.md
+describe what was actually built: Streamlit instead of Gradio (Hugging Face now needs a paid
+plan for Docker Spaces), and no separate `post_to_ledger` tool (posting is internal to the
+pipeline).
 
 ---
 
