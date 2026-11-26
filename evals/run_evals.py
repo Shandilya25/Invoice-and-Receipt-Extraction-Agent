@@ -139,7 +139,7 @@ def run(label: str, min_score: float) -> int:
         UPLOAD_DIR=str(work / "uploads"),
         TRACE_FILE=str(work / "trace.jsonl"),
         MAX_RECEIPT_AGE_DAYS="0",  # dataset receipts are from 2017-2019
-        DEFAULT_CURRENCY="",
+        DEFAULT_CURRENCY="MYR",  # same as the deployed app (Dockerfile / .env.example)
         LLM_MAX_RETRIES="6",  # free-tier rate limits: wait rather than switch model mid-run
     )
     from agent.mcp_client import MCPToolClient
