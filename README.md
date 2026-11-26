@@ -167,6 +167,9 @@ is too small for the OCR model. See [DESIGN.md](DESIGN.md).
 
 ## What I'd do next
 
+- **Re-evaluate the primary model.** On the same 20 cases, Gemini 3.1 Flash-Lite scored **0.993**
+  against 0.933 for GPT-OSS-120B (see [DESIGN.md](DESIGN.md) §5), at 1.6x the cost. Confirm on a
+  bigger set, then probably use Gemini for extraction and keep GPT-OSS for the fast chat agent.
 - **Fix the two remaining extraction patterns:**
   - Tell the model that a quantity is a small count (null when there's no quantity column).
   - Accept "subtotal already after discount" as a valid layout.

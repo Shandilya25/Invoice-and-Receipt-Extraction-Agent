@@ -10,7 +10,7 @@ LLM reads the document, but deterministic code decides what reaches the ledger.
 
 ```mermaid
 sequenceDiagram
-    participant U as User (Gradio)
+    participant U as User (Streamlit)
     participant A as Agent (GPT-OSS-120B)
     participant S as MCP server
     participant P as Pipeline
@@ -129,11 +129,49 @@ another. Traces carry the same ID, so a conversation can be followed end to end.
 | **Untrusted text is wrapped in `<untrusted_document>` tags** that it can't close early | Plain concatenation | Defence in depth. The prompt rule is a *signal*; the guarantees come from the decision being in code. |
 | **Chat history = user text + final answers only** | Store full tool transcripts | Smaller context and cheaper turns, and untrusted tool output doesn't pile up across turns. The answers carry the doc IDs needed for later references. |
 | **SQLite** | Postgres | Zero setup and one file to back up. Fine for a demo; swap it out in production (see README). |
-| **Gradio on Hugging Face Spaces (Docker)** | Streamlit, Render | Free, native chat and upload components, and the same Dockerfile runs locally and in CI. |
+| **One agent and one MCP server per app process** (`st.cache_resource`), session id per browser | A server per user | The OCR model loads once; users are separated by `session_id`, which the agent sets on every tool call. |
+| **Streamlit on Streamlit Community Cloud** | Gradio on Hugging Face Spaces, Render, Fly.io | It's free and deploys from the GitHub repo, with secrets in its own store and about 1 CPU / 2.7 GB of RAM. **Hugging Face was tried first:** creating the Docker Space returned `402 Payment Required` (Docker and Gradio Spaces on free CPU now need PRO). **Render's free tier** (512 MB, 0.1 CPU) is too small for ONNX OCR plus two Python processes. The same app also runs in the Dockerfile for local or self-hosted use. |
 
 ## 5. Models: choice, cost and latency
 
-MODEL_TABLE
+All numbers below are **measured** from the traces of the 20-case eval runs (`evals/.work/<run>/trace.jsonl`)
+on a laptop CPU with free-tier APIs. Prices are the providers' list prices; the free tier costs $0.
+
+| Role | Model | Why this model | Latency (measured) | Tokens per call | List price per 1M tokens (in / out) | Cost per call |
+|---|---|---|---|---|---|---|
+| **Extraction + chat agent (primary)** | **GPT-OSS-120B** on Groq (`openai/gpt-oss-120b`, `reasoning_effort=low`, temperature 0 for extraction) | Reliable JSON and tool calling; Groq serves it very fast; free tier of 1,000 requests/day | extraction p50 **2.1 s**, p95 8.2 s (p95 includes rate-limit waits); agent step p50 3.1 s | extraction ≈ 906 in / 392 out; agent ≈ 789 in / 63 out | $0.15 / $0.60 | extraction ≈ **$0.00037** |
+| **Fallback** | **Gemini 3.1 Flash-Lite** (OpenAI-compatible endpoint) | Different provider, so its failures are independent of Groq's; free tier; same client code | 2.5–5.7 s when not throttled; the free tier throttles bursts (29–67 s waits seen) | ≈ 920 in / 300 out | $0.25 / $1.50 | ≈ **$0.0007** |
+| **OCR** | **PP-OCRv5 mobile** (detection + English recognition) via RapidOCR / ONNX Runtime, CPU | pip-only, ~15 MB of models, no GPU, works in a slim container | p50 **1.5 s**, p95 4.2 s per page; sideways pages ~3x (three passes) | n/a | $0 (runs locally) | $0 |
+
+**Cost per document.** v2 used 29 LLM calls for the 20 eval documents (extraction,
+self-check re-reads and the chat case), $0.0099 in total. That's about **$0.0005 per document**,
+or about **$0.50 per 1,000 documents** at Groq list prices.
+
+**Latency per document.** End to end through the MCP server, p50 5.3 s and p95 15.4 s in v2
+(v1: 3.0 s / 5.3 s). The increase comes from re-reading sideways pages and from the self-check,
+which didn't pay off in this run (see EVAL_REPORT.md).
+
+**The same 20 cases with Gemini as the primary model** (`LLM_PROVIDERS=gemini`, v2 code, one run each):
+
+| | GPT-OSS-120B (Groq) | Gemini 3.1 Flash-Lite |
+|---|---|---|
+| Score | 0.933 | **0.993** |
+| Field accuracy / routing accuracy | 0.988 / 0.85 | 0.988 / **1.00** |
+| Unsafe posts | 0 | 0 |
+| Latency per document, p50 / p95 | **5.3 / 15.4 s** | 6.6 / 23.8 s (free-tier throttling) |
+| LLM cost for the 20 cases (list price) | **$0.0099** | $0.0157 |
+
+Gemini avoided the price-copied-into-quantity mistakes (`sroie_7`, `blur_mild`) and the
+discount-layout case (`sroie_1`). Both models invented the masked vendor on `cord_5`.
+
+**Why GPT-OSS-120B is still primary:** it was chosen up front for speed, price and a
+generous free tier (1k requests/day, no burst throttling on our sequential runs). The comparison
+above suggests Gemini is **more accurate on this workload**, at 1.6x the list price and slower
+on the free tier. Switching is one setting (`LLM_PROVIDERS=gemini,groq`). The next step is to
+confirm the gap on a bigger eval set: with 20 cases, 3 cases is a signal but not proof. A likely
+end state is Gemini for extraction (accuracy matters) and GPT-OSS for the chat agent (speed
+matters).
+
 
 ## 6. Guardrails
 
