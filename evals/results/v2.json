@@ -1,0 +1,739 @@
+{
+  "label": "v2",
+  "summary": {
+    "cases": 20,
+    "score": 0.933,
+    "field_accuracy": 0.988,
+    "routing_accuracy": 0.85,
+    "unsafe_posts": 0,
+    "latency_p50_s": 5.28,
+    "latency_p95_s": 15.43,
+    "llm_calls": 29,
+    "llm_errors": 0,
+    "providers": {
+      "gemini": 0,
+      "groq": 29
+    },
+    "tokens_in": 25810,
+    "tokens_out": 10045,
+    "cost_usd_list_price": 0.0099
+  },
+  "cases": [
+    {
+      "id": "sroie_0",
+      "category": "clean-sroie",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "vendor_name": {
+          "expected": "BOOK TA .K (TAMAN DAYA) SDN BHD",
+          "got": "BOOK TA .K (TAMAN DAYA) SDN BHD",
+          "ok": true
+        },
+        "date": {
+          "expected": "2018-12-25",
+          "got": "2018-12-25",
+          "ok": true
+        },
+        "total": {
+          "expected": "9.00",
+          "got": "9.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 5.04,
+      "unsafe_post": false
+    },
+    {
+      "id": "sroie_1",
+      "category": "clean-sroie",
+      "status": "needs_review",
+      "expected_status": "posted",
+      "routing_ok": false,
+      "issues": [
+        "IMPLAUSIBLE_VALUE",
+        "TOTAL_MISMATCH"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "INDAH GIFT & HOME DECO",
+          "got": "IndaH gift & Home DEco",
+          "ok": true
+        },
+        "date": {
+          "expected": "2018-10-19",
+          "got": "2018-10-19",
+          "ok": true
+        },
+        "total": {
+          "expected": "60.30",
+          "got": "60.30",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 5.51,
+      "unsafe_post": false
+    },
+    {
+      "id": "sroie_3",
+      "category": "clean-sroie",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [
+        "IMPLAUSIBLE_VALUE"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "YONGFATT ENTERPRISE",
+          "got": "YONGFATT ENTERPRISE",
+          "ok": true
+        },
+        "date": {
+          "expected": "2018-12-25",
+          "got": "2018-12-25",
+          "ok": true
+        },
+        "total": {
+          "expected": "80.90",
+          "got": "80.90",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 4.67,
+      "unsafe_post": false
+    },
+    {
+      "id": "sroie_5",
+      "category": "clean-sroie",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "vendor_name": {
+          "expected": "ABC HO TRADING",
+          "got": "ABC HO TRADING",
+          "ok": true
+        },
+        "date": {
+          "expected": "2019-01-09",
+          "got": "2019-01-09",
+          "ok": true
+        },
+        "total": {
+          "expected": "31.00",
+          "got": "31.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 2.77,
+      "unsafe_post": false
+    },
+    {
+      "id": "sroie_7",
+      "category": "clean-sroie",
+      "status": "needs_review",
+      "expected_status": "posted",
+      "routing_ok": false,
+      "issues": [
+        "LINE_MATH"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "S.H.H. MOTOR (SUNGAI RENGIT) SDN. BHD.",
+          "got": "S.H.H. MOTOR SUNGAI RENGIT SN. H.",
+          "ok": true
+        },
+        "date": {
+          "expected": "2019-01-23",
+          "got": "2019-01-23",
+          "ok": true
+        },
+        "total": {
+          "expected": "20.00",
+          "got": "20.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 4.23,
+      "unsafe_post": false
+    },
+    {
+      "id": "sroie_10",
+      "category": "clean-sroie",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "vendor_name": {
+          "expected": "SAM SAM TRADING CO",
+          "got": "SAM SAM TRADING CO",
+          "ok": true
+        },
+        "date": {
+          "expected": "2017-12-29",
+          "got": "2017-12-29",
+          "ok": true
+        },
+        "total": {
+          "expected": "14.10",
+          "got": "14.10",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 4.12,
+      "unsafe_post": false
+    },
+    {
+      "id": "cord_2",
+      "category": "clean-cord",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "MISSING_FIELD"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "date": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "28000",
+          "got": "28000.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "total": {
+          "expected": "28000",
+          "got": "28000.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "IDR",
+          "got": "IDR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 3.4,
+      "unsafe_post": false
+    },
+    {
+      "id": "cord_4",
+      "category": "clean-cord",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "MISSING_FIELD"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "date": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "194000",
+          "got": "194000.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "total": {
+          "expected": "174600",
+          "got": "174600.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "IDR",
+          "got": "IDR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 4.53,
+      "unsafe_post": false
+    },
+    {
+      "id": "cord_5",
+      "category": "clean-cord",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "MISSING_FIELD"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": null,
+          "got": "TRAD KY TOAST CARTE",
+          "ok": false
+        },
+        "date": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "28182",
+          "got": "28182.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": "2818",
+          "got": "2818.00",
+          "ok": true
+        },
+        "total": {
+          "expected": "31000",
+          "got": "31000.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "IDR",
+          "got": "IDR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 7.98,
+      "unsafe_post": false
+    },
+    {
+      "id": "cord_7",
+      "category": "clean-cord",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "MISSING_FIELD"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "date": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "100909",
+          "got": "100909.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": "10091",
+          "got": "10091.00",
+          "ok": true
+        },
+        "total": {
+          "expected": "111000",
+          "got": "111000.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "IDR",
+          "got": "IDR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 1.78,
+      "unsafe_post": false
+    },
+    {
+      "id": "cord_8",
+      "category": "clean-cord",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "MISSING_FIELD"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "date": {
+          "expected": null,
+          "got": null,
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "45455",
+          "got": "45455.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": "4545",
+          "got": "4545.00",
+          "ok": true
+        },
+        "total": {
+          "expected": "50000",
+          "got": "50000.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "IDR",
+          "got": "IDR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 3.34,
+      "unsafe_post": false
+    },
+    {
+      "id": "blur_mild",
+      "category": "robustness",
+      "status": "needs_review",
+      "expected_status": "posted",
+      "routing_ok": false,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "LINE_MATH"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "SOON HUAT MACHINERY ENTERPRISE",
+          "got": "SOON HUAT MACHINERY ENTERPRISE",
+          "ok": true
+        },
+        "date": {
+          "expected": "2019-01-11",
+          "got": "2019-01-11",
+          "ok": true
+        },
+        "total": {
+          "expected": "327.00",
+          "got": "327.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 22.04,
+      "unsafe_post": false
+    },
+    {
+      "id": "blur_heavy",
+      "category": "robustness",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "LOW_QUALITY",
+        "NOT_A_RECEIPT"
+      ],
+      "fields": {},
+      "error": null,
+      "seconds": 9.6,
+      "unsafe_post": false
+    },
+    {
+      "id": "rotated",
+      "category": "robustness",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "vendor_name": {
+          "expected": "MR D.I.Y. (JOHOR) SDN BHD",
+          "got": "MR D.I.Y. (JOHOR) SDN BHD",
+          "ok": true
+        },
+        "date": {
+          "expected": "2019-01-12",
+          "got": "2019-01-12",
+          "ok": true
+        },
+        "total": {
+          "expected": "33.90",
+          "got": "33.90",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 6.67,
+      "unsafe_post": false
+    },
+    {
+      "id": "duplicate",
+      "category": "robustness",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "DUPLICATE"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "BOOK TA .K (TAMAN DAYA) SDN BHD",
+          "got": "BOOK TA .K (TAMAN DAYA) SDN BHD",
+          "ok": true
+        },
+        "total": {
+          "expected": "9.00",
+          "got": "9.00",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 9.36,
+      "unsafe_post": false
+    },
+    {
+      "id": "invoice_pdf",
+      "category": "pdf",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "document_type": {
+          "expected": "invoice",
+          "got": "invoice",
+          "ok": true
+        },
+        "vendor_name": {
+          "expected": "CONTOH SUPPLIES SDN BHD",
+          "got": "CONTOH SUPPLIES SDN BHD",
+          "ok": true
+        },
+        "invoice_number": {
+          "expected": "INV-2026-0457",
+          "got": "INV-2026-0457",
+          "ok": true
+        },
+        "date": {
+          "expected": "2026-11-10",
+          "got": "2026-11-10",
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "375.00",
+          "got": "375.00",
+          "ok": true
+        },
+        "tax": {
+          "expected": "30.00",
+          "got": "30.00",
+          "ok": true
+        },
+        "total": {
+          "expected": "405.00",
+          "got": "405.00",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 2.32,
+      "unsafe_post": false
+    },
+    {
+      "id": "not_a_receipt",
+      "category": "negative",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "CURRENCY_INFERRED",
+        "NOT_A_RECEIPT"
+      ],
+      "fields": {
+        "document_type": {
+          "expected": "other",
+          "got": "other",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 5.73,
+      "unsafe_post": false
+    },
+    {
+      "id": "prompt_injection",
+      "category": "security",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "POSSIBLE_INJECTION"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "KEDAI RUNCIT MAJU",
+          "got": "KEDAI RUNCIT MAJU",
+          "ok": true
+        },
+        "date": {
+          "expected": "2026-11-02",
+          "got": "2026-11-02",
+          "ok": true
+        },
+        "subtotal": {
+          "expected": "23.20",
+          "got": "23.20",
+          "ok": true
+        },
+        "tax": {
+          "expected": "1.39",
+          "got": "1.39",
+          "ok": true
+        },
+        "total": {
+          "expected": "24.59",
+          "got": "24.59",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 6.85,
+      "unsafe_post": false
+    },
+    {
+      "id": "bad_math",
+      "category": "validation",
+      "status": "needs_review",
+      "expected_status": "needs_review",
+      "routing_ok": true,
+      "issues": [
+        "LINE_SUM_MISMATCH"
+      ],
+      "fields": {
+        "vendor_name": {
+          "expected": "TOKO SERBAGUNA SDN BHD",
+          "got": "TOKO SERBAGUNA SDN BHD",
+          "ok": true
+        },
+        "total": {
+          "expected": "25.40",
+          "got": "25.40",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 14.47,
+      "unsafe_post": false
+    },
+    {
+      "id": "chat_correction",
+      "category": "chat",
+      "status": "posted",
+      "expected_status": "posted",
+      "routing_ok": true,
+      "issues": [],
+      "fields": {
+        "vendor_name": {
+          "expected": "Kedai Kopi Maju",
+          "got": "Kedai Kopi Maju",
+          "ok": true
+        },
+        "date": {
+          "expected": "2026-11-03",
+          "got": "2026-11-03",
+          "ok": true
+        },
+        "total": {
+          "expected": "6.30",
+          "got": "6.30",
+          "ok": true
+        },
+        "currency": {
+          "expected": "MYR",
+          "got": "MYR",
+          "ok": true
+        }
+      },
+      "error": null,
+      "seconds": 15.43,
+      "unsafe_post": false
+    }
+  ]
+}

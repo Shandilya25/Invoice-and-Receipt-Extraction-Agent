@@ -72,13 +72,17 @@ docker build -t receipt-agent . && docker run --rm -p 7860:7860 --env-file .env 
 **Without Docker** (Python 3.12+):
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m app.ui
+# Linux / macOS
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && .venv/bin/python -m app.ui
 ```
 
-On Windows use `.venv\Scripts\` instead of `.venv/bin/`.
+```powershell
+# Windows (PowerShell)
+py -m venv .venv; .venv\Scripts\pip install -r requirements.txt; .venv\Scripts\python -m app.ui
+```
 
-Open http://localhost:7860, upload a receipt from `evals/data/` and try, for example,
-*"The vendor on that receipt is Kedai Kopi Maju"* on `synthetic_no_vendor.png`.
+Open **http://127.0.0.1:7860**. Click one of the four samples under the chat box and press Enter.
+For the chat-correction demo, use sample 2, then type *"The vendor is Kedai Kopi Maju"*.
 
 ## Tests and evals
 
@@ -101,25 +105,32 @@ Full breakdown with per-case results and root causes: [EVAL_REPORT.md](EVAL_REPO
 
 ## Deploy (Hugging Face Spaces, Docker, free CPU)
 
-1. Create a Space at https://huggingface.co/new-space with **SDK: Docker** and **Hardware: CPU basic (free)**.
-2. In the Space's **Settings → Variables and secrets**, add the secrets `GROQ_API_KEY` and `GEMINI_API_KEY`.
-3. Upload the app files. The front matter at the top of this README tells Spaces to build the
-   `Dockerfile` and serve port 7860:
-   ```bash
-   pip install huggingface_hub && hf auth login
-   hf upload <your-user>/receipt-agent . . --repo-type space \
-     --exclude "evals/*" "tests/*" "data/*" ".env" ".venv/*" "traces/*" "uploads/*" ".git/*"
-   ```
-4. The Space builds the image (the OCR models are downloaded during the build) and starts on its URL.
+```bash
+hf auth login            # once, with a Hugging Face token that has "Write" access
+python deploy_hf.py      # creates/updates the Space <you>/receipt-agent
+```
+
+[deploy_hf.py](deploy_hf.py) does three things:
+
+1. Creates a Docker Space (free CPU). The front matter at the top of this README tells Spaces
+   to build the `Dockerfile` and serve port 7860.
+2. Copies `GROQ_API_KEY` / `GEMINI_API_KEY` from your `.env` into the Space's **encrypted
+   secrets**. Keys are never uploaded as files.
+3. Uploads only what the image needs (`Dockerfile`, `requirements.txt`, `core/`, `agent/`,
+   `mcp_server/`, `app/`).
+
+The Space then builds the image (the OCR models are downloaded during the build, which takes
+about 5–8 minutes the first time) and serves it at `https://<you>-receipt-agent.hf.space`.
 
 **CI on GitHub:** add the same two keys as repository secrets
 (**Settings → Secrets and variables → Actions**) so the eval job can run.
 
 ## Rollback
 
-- **Hugging Face Space:** every upload is a commit in the Space repo. Open the Space's
-  **Files → History**, pick the last good commit and revert it (or re-upload from the matching
-  git tag: `git checkout <good-tag> && hf upload ...`). The Space rebuilds from that commit.
+- **Hugging Face Space:** every deploy is a commit in the Space repo. Either check out the last
+  good version locally and redeploy (`git checkout <good-commit> && python deploy_hf.py`), or
+  open the Space's **Files → History** and revert the bad commit. The Space rebuilds
+  automatically.
 - **Docker:** tag each build with its git SHA (`docker build -t receipt-agent:$(git rev-parse --short HEAD) .`)
   and run the previous tag to roll back.
 - **Code:** `git revert <bad-commit>`. CI must pass (lint, tests, eval gate) before you redeploy.

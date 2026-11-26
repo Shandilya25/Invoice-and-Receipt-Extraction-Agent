@@ -48,6 +48,9 @@ SUPPORTED_CURRENCIES = frozenset(_CURRENCY_ALIASES.values())
 
 # Currencies printed without minor units, where a single "." or "," is a thousands separator.
 _NO_MINOR_UNIT = frozenset({"IDR", "JPY", "KRW", "VND"})
+# Currencies whose receipts always use "." as the decimal point ("9.000" = 9, not 9000).
+_DOT_DECIMAL = frozenset({"MYR", "SGD", "USD", "GBP", "INR"})
+_UNICODE_MINUS = str.maketrans({"−": "-", "–": "-", "—": "-"})
 
 _VENDOR_SUFFIXES = re.compile(
     r"\b(SDN\.?\s*BHD\.?|BHD\.?|PLT|PT\.?|TBK\.?|LTD\.?|LIMITED|INC\.?|LLC|CO\.?)\b"
@@ -65,7 +68,7 @@ def parse_amount(text: str | None, currency: str | None = None) -> Decimal | Non
     """
     if text is None:
         return None
-    s = str(text).strip()
+    s = str(text).strip().translate(_UNICODE_MINUS)  # "−0.01" / "–0.01" -> "-0.01"
     if not s:
         return None
 
@@ -87,7 +90,9 @@ def parse_amount(text: str | None, currency: str | None = None) -> Decimal | Non
             return None
         s = re.sub(r"\s", "", s)
 
-    s = s.strip(".,")
+    s = s.rstrip(".,")  # "9.50." -> "9.50"
+    if s[:1] in ".,":  # ".01" -> "0.01" (stripping the dot would turn it into 1.00)
+        s = "0" + s
     if not re.fullmatch(r"\d[\d.,]*", s):
         return None
 
@@ -121,6 +126,8 @@ def _resolve_separators(s: str, currency: str | None) -> str | None:
     integer, frac = parts
     if currency in _NO_MINOR_UNIT:
         return integer + frac
+    if currency in _DOT_DECIMAL and sep == ".":  # MYR "9.000" is 9 ringgit
+        return f"{integer}.{frac}"
     if len(frac) == 3 and integer.lstrip("0"):  # "60.000" / "12,500" -> thousands
         return integer + frac
     return f"{integer}.{frac}"  # "9.50", "12,5", "0.535"
@@ -263,6 +270,19 @@ def normalize_record(
         payment_method=raw.payment_method,
         **{f: amount(f, getattr(raw, f)) for f in AMOUNT_FIELDS},
     )
+
+    # A rounding adjustment is a few cents by definition. A large one is an OCR misread
+    # ("-0.01" read as "-001"), so drop it; the total check has a tolerance for rounding anyway.
+    if record.rounding and record.total and abs(record.rounding) > abs(record.total) / 100:
+        issues.append(
+            Issue(
+                code=IssueCode.IMPLAUSIBLE_VALUE,
+                field="rounding",
+                message=f"Ignored rounding {record.rounding}: too large for a rounding adjustment.",
+                blocking=False,
+            )
+        )
+        record.rounding = None
     return record, issues
 
 

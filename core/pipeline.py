@@ -20,10 +20,24 @@ from core.ocr import OcrResult, read_document
 from core.schema import DocumentType, Issue, IssueCode, RawExtraction, ReceiptRecord, RecordStatus
 from core.store import Store
 from core.tracing import log_step, timed
-from core.validate import DocumentContext, ValidationConfig, validate_record
+from core.validate import (
+    DocumentContext,
+    ValidationConfig,
+    ValidationResult,
+    validate_record,
+)
 
-Extractor = Callable[[str, str], RawExtraction]  # (ocr_text, session_id) -> extraction
+Extractor = Callable[[str, str, str], RawExtraction]  # (ocr_text, session_id, feedback)
 OcrReader = Callable[[Path], OcrResult]
+
+# Failed checks that suggest the model misread a number (rather than a bad document).
+SELF_CHECK_CODES = {
+    IssueCode.LINE_MATH,
+    IssueCode.LINE_SUM_MISMATCH,
+    IssueCode.TOTAL_MISMATCH,
+    IssueCode.BAD_AMOUNT,
+    IssueCode.TAX_RATE_ODD,
+}
 
 
 def config_from_env() -> ValidationConfig:
@@ -75,7 +89,12 @@ class ReceiptPipeline:
             home_currency=currency,
             verified_fields_json="[]",
         )
-        return self._decide(doc_id, record, prior, verified=set())
+        result = self._validate(doc_id, record, prior, verified=set())
+        if result.codes & SELF_CHECK_CODES:
+            record, prior, result = self._self_check(
+                doc_id, ocr.text, currency, session_id, record, prior, result
+            )
+        return self._save(doc_id, record, prior, set(), result)
 
     def correct(self, doc_id: str, field: str, value: str, session_id: str = "") -> dict:
         """Apply a user's correction, log it, and re-run validation (which may post the record)."""
@@ -91,7 +110,8 @@ class ReceiptPipeline:
         # Issues found while normalising the corrected field no longer apply.
         prior = [i for i in _load_issues(doc["prior_issues_json"]) if i.field != fix.field]
         verified = set(json.loads(doc["verified_fields_json"])) | {fix.field}
-        return self._decide(doc_id, fix.record, prior, verified)
+        result = self._validate(doc_id, fix.record, prior, verified)
+        return self._save(doc_id, fix.record, prior, verified, result)
 
     def summary(self, doc_id: str) -> dict:
         doc = self._get(doc_id)
@@ -116,19 +136,39 @@ class ReceiptPipeline:
 
     # ------------------------------------------------------------------ steps
 
-    def _extract(self, text: str, currency: str | None, session_id: str):
+    def _extract(self, text: str, currency: str | None, session_id: str, feedback: str = ""):
         if not text.strip():
             return _failed("No text could be read from the document.")
         try:
-            with timed("extract", session_id=session_id):
-                raw = self.extractor(text, session_id)
+            with timed("extract", session_id=session_id, self_check=bool(feedback)):
+                raw = self.extractor(text, session_id, feedback)
         except (ExtractionError, LLMUnavailable) as e:
             return _failed(f"Automatic extraction failed: {e}")
         return normalize_record(raw, currency)
 
-    def _decide(
+    def _self_check(self, doc_id, text, currency, session_id, record, prior, result):
+        """The numbers don't add up, so the model may have misread something (e.g. a price
+        taken as a quantity). Ask it once to re-read, telling it which checks failed, and keep
+        the new reading only if it has FEWER blocking issues. The grounding check means it
+        can't 'fix' the maths by inventing numbers that aren't printed."""
+        problems = "\n".join(i.message for i in result.issues if i.code in SELF_CHECK_CODES)
+        new_record, new_prior = self._extract(text, currency, session_id, feedback=problems)
+        new_result = self._validate(doc_id, new_record, new_prior, verified=set())
+        improved = _blocking(new_result) < _blocking(result)
+        log_step(
+            "self_check",
+            session_id=session_id,
+            doc_id=doc_id,
+            before=_blocking(result),
+            after=_blocking(new_result),
+            kept_new=improved,
+        )
+        return (new_record, new_prior, new_result) if improved else (record, prior, result)
+
+    def _validate(
         self, doc_id: str, record: ReceiptRecord, prior: list[Issue], verified: set[str]
-    ) -> dict:
+    ) -> ValidationResult:
+        """Run all checks. No side effects."""
         doc = self._get(doc_id)
         date = record.date.isoformat() if record.date else None
         total = str(record.total) if record.total is not None else None
@@ -141,8 +181,19 @@ class ReceiptPipeline:
             ),
             verified_fields=frozenset(verified),
         )
-        result = validate_record(record, context, self.config, prior)
+        return validate_record(record, context, self.config, prior)
 
+    def _save(
+        self,
+        doc_id: str,
+        record: ReceiptRecord,
+        prior: list[Issue],
+        verified: set[str],
+        result: ValidationResult,
+    ) -> dict:
+        """Store the outcome. The ONLY place that posts to the ledger, and only if result.ok."""
+        date = record.date.isoformat() if record.date else None
+        total = str(record.total) if record.total is not None else None
         status = RecordStatus.POSTED if result.ok else RecordStatus.NEEDS_REVIEW
         if result.ok:
             self.store.post_to_ledger(
@@ -169,6 +220,10 @@ class ReceiptPipeline:
 def _failed(message: str) -> tuple[ReceiptRecord, list[Issue]]:
     issue = Issue(code=IssueCode.EXTRACTION_FAILED, message=message)
     return ReceiptRecord(document_type=DocumentType.RECEIPT), [issue]
+
+
+def _blocking(result: ValidationResult) -> int:
+    return sum(i.blocking for i in result.issues)
 
 
 def _dump_issues(issues: list[Issue]) -> str:

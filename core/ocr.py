@@ -58,6 +58,11 @@ def read_document(path: str | Path) -> OcrResult:
 def ocr_image(image: Image.Image, source: str = "image") -> OcrResult:
     pixels = np.array(image)
     out = _engine()(pixels)
+    if _is_sideways(out):
+        # The page is rotated 90°: try both directions and keep the more confident read.
+        # (PP-OCR's own classifier only fixes upside-down text, not sideways pages.)
+        tries = [_engine()(np.array(image.rotate(a, expand=True))) for a in (90, 270)]
+        out = max(tries, key=lambda o: sum(o.scores) if o.scores else 0)
     if out.boxes is None or not out.txts:
         return OcrResult(text="", confidence=0.0, blur_score=blur_score(pixels), source=source)
     return OcrResult(
@@ -66,6 +71,18 @@ def ocr_image(image: Image.Image, source: str = "image") -> OcrResult:
         blur_score=blur_score(pixels),
         source=source,
     )
+
+
+def _is_sideways(out) -> bool:
+    """Printed text lines are wider than tall. If most detected boxes are taller than wide,
+    the page is lying on its side."""
+    if out.boxes is None or len(out.boxes) < 3:
+        return False
+    tall = 0
+    for box in out.boxes:
+        xs, ys = [p[0] for p in box], [p[1] for p in box]
+        tall += (max(ys) - min(ys)) > (max(xs) - min(xs))
+    return tall > len(out.boxes) / 2
 
 
 def blur_score(pixels: np.ndarray) -> float:

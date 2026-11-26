@@ -38,6 +38,8 @@ Rules:
 - Copy every value EXACTLY as printed: keep the number format ("60.000", "1,234.50") and the
   date format ("25/12/2018"). Do not convert, translate or calculate anything.
 - Use null for anything that is not printed. Never guess a vendor, date or amount.
+- The text comes from OCR, so labels may be misspelled ("SUS_TSTAL" = SUBTOTAL, "TOTA" =
+  TOTAL). Read labels sensibly, but still copy the amounts as printed.
 - document_type: "invoice" if it is titled invoice/tax invoice and has an invoice number,
   "receipt" for till receipts and cash bills, "other" for anything that is not a receipt or
   invoice (forms, letters, menus).
@@ -52,16 +54,32 @@ Rules:
 """
 
 
+SELF_CHECK_PROMPT = """A first reading of this document failed the arithmetic checks below. Re-read
+the document carefully and correct any value you misread (for example a price taken as a
+quantity, or a tax or cash line taken as the total). If the printed numbers really are
+inconsistent, copy them exactly as printed: do not invent numbers to make them add up.
+Return the complete JSON object.
+"""
+
+
 class ExtractionError(RuntimeError):
     """The model did not return a valid extraction within MAX_ATTEMPTS."""
 
 
-def extract_fields(ocr_text: str, session_id: str = "") -> RawExtraction:
+def extract_fields(ocr_text: str, session_id: str = "", feedback: str = "") -> RawExtraction:
+    """`feedback` lists checks a previous reading failed (the pipeline's self-check)."""
     text = ocr_text[:MAX_OCR_CHARS]
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": wrap_untrusted(text, source="ocr")},
     ]
+    if feedback:
+        messages.append(
+            {
+                "role": "user",
+                "content": SELF_CHECK_PROMPT + wrap_untrusted(feedback, source="failed_checks"),
+            }
+        )
     last_error = ""
     for _ in range(MAX_ATTEMPTS):
         reply = chat(

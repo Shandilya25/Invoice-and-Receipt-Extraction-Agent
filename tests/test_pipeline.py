@@ -23,7 +23,7 @@ def make_pipeline(tmp_path, ocr_text, raw):
     store = Store(tmp_path / "test.db")
     pipeline = ReceiptPipeline(
         store,
-        extractor=lambda text, session_id: raw,
+        extractor=lambda text, session_id, feedback="": raw,
         ocr=lambda path: OcrResult(ocr_text, confidence=0.95, blur_score=200, source="image"),
         config=ValidationConfig(max_age_days=None),
     )
@@ -96,7 +96,7 @@ def test_injected_document_cannot_be_posted_through_chat_corrections(tmp_path, m
 def test_extraction_failure_goes_to_review(tmp_path):
     from core.extract import ExtractionError
 
-    def broken(text, session_id):
+    def broken(text, session_id, feedback=""):
         raise ExtractionError("model returned garbage")
 
     store = Store(tmp_path / "t.db")
@@ -153,3 +153,51 @@ def test_mcp_returns_readable_correction_errors(mcp):
         )
     )
     assert "cannot be corrected" in result["error"] or "locked" in result["error"]
+
+
+# --------------------------------------------------------------------------- self-check (v2)
+
+
+def test_self_check_keeps_a_better_second_reading(tmp_path, myr_raw):
+    """First reading takes the price as the quantity; the re-read fixes it."""
+    misread = myr_raw.model_copy(deep=True)
+    misread.line_items[1].quantity = "5.96"
+    readings = iter([misread, myr_raw])
+    calls = []
+
+    def extractor(text, session_id, feedback=""):
+        calls.append(feedback)
+        return next(readings)
+
+    store = Store(tmp_path / "t.db")
+    pipeline = ReceiptPipeline(
+        store,
+        extractor=extractor,
+        ocr=lambda p: OcrResult(MYR_RECEIPT_TEXT, 0.95, 200, "image"),
+        config=ValidationConfig(max_age_days=None),
+    )
+    result = pipeline.process(upload(tmp_path))
+    assert result["status"] == "posted"
+    assert calls[0] == "" and "5.96 x 5.96" in calls[1]  # the failed check was fed back
+
+
+def test_self_check_cannot_invent_numbers_to_pass(tmp_path, myr_raw):
+    """A truly inconsistent receipt: if the re-read 'fixes' the maths with a number that isn't
+    printed, grounding rejects it and the first (honest) reading is kept."""
+    text = MYR_RECEIPT_TEXT.replace(
+        "Total Excl GST:                  8.96", "Total Excl GST:                  9.96"
+    )
+    honest = myr_raw.model_copy(update={"subtotal": "9.96"})
+    invented = myr_raw.model_copy(update={"subtotal": "8.96", "total": "9.50"})
+    readings = iter([honest, invented])
+    store = Store(tmp_path / "t.db")
+    pipeline = ReceiptPipeline(
+        store,
+        extractor=lambda text, session_id, feedback="": next(readings),
+        ocr=lambda p: OcrResult(text, 0.95, 200, "image"),
+        config=ValidationConfig(max_age_days=None),
+    )
+    result = pipeline.process(upload(tmp_path))
+    assert result["status"] == "needs_review"
+    assert result["record"]["subtotal"] == "9.96"
+    assert store.ledger() == []

@@ -34,6 +34,11 @@ from core.schema import IssueCode, RawExtraction
         ("RM -5.00", None, "-5.00"),
         ("0.535", None, "0.54"),  # leading zero can't be a thousands group
         ("1.5", "IDR", "15.00"),  # IDR has no minor unit
+        # Regressions found by the v1 eval run:
+        ("9.000", "MYR", "9.00"),  # SROIE unit price: MYR uses "." as the decimal point
+        ("-.01", None, "-0.01"),  # leading dot used to become -1.00
+        ("−0.01", None, "-0.01"),  # unicode minus sign
+        ("–0.01", None, "-0.01"),  # en dash used as minus
     ],
 )
 def test_parse_amount(text, currency, expected):
@@ -138,3 +143,17 @@ def test_raw_extraction_treats_placeholder_strings_as_null():
 def test_raw_extraction_rejects_unknown_fields():
     with pytest.raises(ValueError):
         RawExtraction.model_validate({"document_type": "receipt", "status": "posted"})
+
+
+def test_implausible_rounding_is_ignored_with_a_warning():
+    # OCR read "-0.01" as "-001"; the model copied it faithfully.
+    raw = RawExtraction(document_type="receipt", subtotal="80.91", rounding="-001", total="80.90")
+    record, issues = normalize_record(raw)
+    assert record.rounding is None
+    assert [(i.code, i.blocking) for i in issues] == [(IssueCode.IMPLAUSIBLE_VALUE, False)]
+
+
+def test_small_rounding_is_kept():
+    raw = RawExtraction(document_type="receipt", subtotal="80.91", rounding="-0.01", total="80.90")
+    record, issues = normalize_record(raw)
+    assert record.rounding == Decimal("-0.01") and issues == []

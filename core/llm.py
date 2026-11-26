@@ -62,6 +62,13 @@ _RETRYABLE = (
 )
 
 
+def _providers() -> list[Provider]:
+    """Providers with a key set, in LLM_PROVIDERS order (default: groq, then gemini)."""
+    order = [n.strip() for n in os.getenv("LLM_PROVIDERS", "groq,gemini").split(",")]
+    by_name = {p.name: p for p in PROVIDERS}
+    return [by_name[n] for n in order if n in by_name and os.getenv(by_name[n].key_env)]
+
+
 class LLMUnavailable(RuntimeError):
     """No provider could answer."""
 
@@ -88,7 +95,7 @@ def chat(
     session_id: str = "",
 ):
     """Send a chat request; returns the assistant message (OpenAI format)."""
-    available = [p for p in PROVIDERS if os.getenv(p.key_env)]
+    available = _providers()
     if not available:
         raise LLMUnavailable("No API key set. Copy .env.example to .env and add GROQ_API_KEY.")
 

@@ -6,7 +6,7 @@
 Metric (per run):
   field_accuracy   = correct fields / graded fields
   routing_accuracy = cases with the right status (posted / needs_review) and expected flags
-  unsafe_posts     = cases that should have gone to review but were posted (must be 0)
+  unsafe_posts     = posted records that needed review OR had a wrong value (must be 0)
   score            = 0.6 * field_accuracy + 0.4 * routing_accuracy
 
 Exits with code 1 if score < --min-score or unsafe_posts > 0 (this is the CI gate).
@@ -63,18 +63,28 @@ def score_case(case: dict, doc: dict, seconds: float) -> dict:
     }
     status = doc.get("status", "error")
     routing_ok = status == case["expected_status"] and set(case.get("expected_issues", [])) <= codes
-    return {
+    result = {
         "id": case["id"],
         "category": case["category"],
         "status": status,
         "expected_status": case["expected_status"],
         "routing_ok": routing_ok,
-        "unsafe_post": case["expected_status"] == "needs_review" and status == "posted",
         "issues": sorted(codes),
         "fields": fields,
         "error": doc.get("error"),
         "seconds": round(seconds, 2),
     }
+    result["unsafe_post"] = is_unsafe_post(result)
+    return result
+
+
+def is_unsafe_post(result: dict) -> bool:
+    """The worst outcome: something reached the ledger that shouldn't have. Either the record
+    needed review, or it was posted with a wrong value."""
+    if result["status"] != "posted":
+        return False
+    wrong_value = not all(f["ok"] for f in result["fields"].values())
+    return result["expected_status"] == "needs_review" or wrong_value
 
 
 def summarize(results: list[dict], trace_file: Path) -> dict:
@@ -179,6 +189,17 @@ def run(label: str, min_score: float) -> int:
     return 0 if passed else 1
 
 
+def rescore(label: str) -> None:
+    """Re-apply the current scoring rules to a saved run (no new LLM calls)."""
+    path = RESULTS / f"{label}.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    for result in data["cases"]:
+        result["unsafe_post"] = is_unsafe_post(result)
+    data["summary"] = summarize(data["cases"], WORK / label / "trace.jsonl")
+    path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+    print(json.dumps(data["summary"], indent=2))
+
+
 def compare(before: str, after: str) -> str:
     a, b = (
         json.loads((RESULTS / f"{x}.json").read_text(encoding="utf-8")) for x in (before, after)
@@ -217,7 +238,11 @@ def main() -> None:
     parser.add_argument("--label", default="latest")
     parser.add_argument("--min-score", type=float, default=0.80)
     parser.add_argument("--compare", nargs=2, metavar=("BEFORE", "AFTER"))
+    parser.add_argument("--rescore", metavar="LABEL", help="re-score a saved run")
     args = parser.parse_args()
+    if args.rescore:
+        rescore(args.rescore)
+        return
     if args.compare:
         print(compare(*args.compare))
         return

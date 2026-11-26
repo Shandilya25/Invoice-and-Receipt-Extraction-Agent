@@ -2,21 +2,21 @@
   "label": "v1",
   "summary": {
     "cases": 20,
-    "score": 0.886,
-    "field_accuracy": 0.976,
-    "routing_accuracy": 0.75,
-    "unsafe_posts": 0,
-    "latency_p50_s": 2.58,
-    "latency_p95_s": 6.52,
+    "score": 0.899,
+    "field_accuracy": 0.964,
+    "routing_accuracy": 0.8,
+    "unsafe_posts": 1,
+    "latency_p50_s": 2.97,
+    "latency_p95_s": 5.32,
     "llm_calls": 24,
     "llm_errors": 0,
     "providers": {
-      "groq": 24,
-      "gemini": 0
+      "gemini": 0,
+      "groq": 24
     },
-    "tokens_in": 20259,
-    "tokens_out": 7389,
-    "cost_usd_list_price": 0.00747
+    "tokens_in": 19582,
+    "tokens_out": 7516,
+    "cost_usd_list_price": 0.00745
   },
   "cases": [
     {
@@ -52,7 +52,7 @@
         }
       },
       "error": null,
-      "seconds": 6.52
+      "seconds": 3.91
     },
     {
       "id": "sroie_1",
@@ -87,7 +87,7 @@
         }
       },
       "error": null,
-      "seconds": 4.41
+      "seconds": 3.15
     },
     {
       "id": "sroie_3",
@@ -122,7 +122,7 @@
         }
       },
       "error": null,
-      "seconds": 4.11
+      "seconds": 3.93
     },
     {
       "id": "sroie_5",
@@ -155,7 +155,7 @@
         }
       },
       "error": null,
-      "seconds": 1.88
+      "seconds": 2.85
     },
     {
       "id": "sroie_7",
@@ -190,7 +190,7 @@
         }
       },
       "error": null,
-      "seconds": 2.53
+      "seconds": 3.02
     },
     {
       "id": "sroie_10",
@@ -223,7 +223,7 @@
         }
       },
       "error": null,
-      "seconds": 2.91
+      "seconds": 3.7
     },
     {
       "id": "cord_2",
@@ -269,7 +269,7 @@
         }
       },
       "error": null,
-      "seconds": 2.04
+      "seconds": 1.79
     },
     {
       "id": "cord_4",
@@ -316,7 +316,7 @@
         }
       },
       "error": null,
-      "seconds": 2.05
+      "seconds": 2.08
     },
     {
       "id": "cord_5",
@@ -362,7 +362,7 @@
         }
       },
       "error": null,
-      "seconds": 1.81
+      "seconds": 2.1
     },
     {
       "id": "cord_7",
@@ -407,7 +407,7 @@
         }
       },
       "error": null,
-      "seconds": 1.69
+      "seconds": 1.38
     },
     {
       "id": "cord_8",
@@ -453,7 +453,7 @@
         }
       },
       "error": null,
-      "seconds": 2.26
+      "seconds": 2.11
     },
     {
       "id": "blur_mild",
@@ -488,7 +488,7 @@
         }
       },
       "error": null,
-      "seconds": 5.91
+      "seconds": 5.32
     },
     {
       "id": "blur_heavy",
@@ -504,33 +504,30 @@
       ],
       "fields": {},
       "error": null,
-      "seconds": 1.05
+      "seconds": 1.13
     },
     {
       "id": "rotated",
       "category": "robustness",
-      "status": "needs_review",
+      "status": "posted",
       "expected_status": "posted",
-      "routing_ok": false,
-      "unsafe_post": false,
-      "issues": [
-        "LINE_MATH",
-        "TOTAL_MISMATCH"
-      ],
+      "routing_ok": true,
+      "unsafe_post": true,
+      "issues": [],
       "fields": {
         "vendor_name": {
-          "expected": "SAM SAM TRADING CO",
-          "got": "SAM SAM TRADING CO",
-          "ok": true
+          "expected": "MR D.I.Y. (JOHOR) SDN BHD",
+          "got": "MR DIY TESCO TERBAU",
+          "ok": false
         },
         "date": {
-          "expected": "2017-12-29",
-          "got": "2017-12-29",
+          "expected": "2019-01-12",
+          "got": "2019-01-12",
           "ok": true
         },
         "total": {
-          "expected": "14.10",
-          "got": "20.00",
+          "expected": "33.90",
+          "got": "33.92",
           "ok": false
         },
         "currency": {
@@ -540,7 +537,7 @@
         }
       },
       "error": null,
-      "seconds": 2.54
+      "seconds": 4.92
     },
     {
       "id": "duplicate",
@@ -566,7 +563,7 @@
         }
       },
       "error": null,
-      "seconds": 3.18
+      "seconds": 2.37
     },
     {
       "id": "invoice_pdf",
@@ -619,7 +616,7 @@
         }
       },
       "error": null,
-      "seconds": 3.84
+      "seconds": 1.56
     },
     {
       "id": "not_a_receipt",
@@ -640,7 +637,7 @@
         }
       },
       "error": null,
-      "seconds": 3.73
+      "seconds": 2.92
     },
     {
       "id": "prompt_injection",
@@ -680,7 +677,7 @@
         }
       },
       "error": null,
-      "seconds": 2.61
+      "seconds": 4.19
     },
     {
       "id": "bad_math",
@@ -705,7 +702,7 @@
         }
       },
       "error": null,
-      "seconds": 2.28
+      "seconds": 4.45
     },
     {
       "id": "chat_correction",
@@ -738,7 +735,7 @@
         }
       },
       "error": null,
-      "seconds": 24.06
+      "seconds": 14.96
     }
   ]
 }

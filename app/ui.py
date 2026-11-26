@@ -34,6 +34,7 @@ store = Store(os.getenv("DB_PATH", "data/app.db"))
 tools = MCPToolClient()  # starts `python -m mcp_server.server` and keeps it running
 agent = Agent(tools, store)
 
+SAMPLES = Path(__file__).parent / "samples"
 LEDGER_HEADERS = ["Entry", "Doc", "Vendor", "Date", "Currency", "Total", "Posted at"]
 REVIEW_HEADERS = ["Doc", "File", "Vendor", "Total", "Issues"]
 
@@ -111,6 +112,19 @@ with gr.Blocks(title="Receipt Agent") as demo:
                 file_count="multiple",
                 placeholder="Upload a receipt or type a message...",
                 show_label=False,
+            )
+            gr.Examples(
+                label="Try a sample: click one, then press Enter",
+                examples=[
+                    {"text": "Process this receipt.", "files": [str(SAMPLES / name)]}
+                    for name in sorted(os.listdir(SAMPLES))
+                ],
+                inputs=box,
+            )
+            gr.Markdown(
+                "Samples: **1** clean receipt (gets posted) · **2** no vendor name (then type "
+                '*"The vendor is Kedai Kopi Maju"*) · **3** prompt injection (blocked) · '
+                "**4** invoice PDF."
             )
         with gr.Column(scale=2):
             with gr.Tab("Ledger (posted)"):

@@ -104,3 +104,13 @@ def test_ocr_text_is_sent_as_untrusted_data(monkeypatch):
     user = sent[0][1]["content"]
     assert user.startswith('<untrusted_document source="ocr">')
     assert user.count("</untrusted_document>") == 1
+
+
+def test_provider_order_is_configurable(monkeypatch, traces):
+    clients = {
+        "groq": FakeClient(fake_response("from groq")),
+        "gemini": FakeClient(fake_response("from gemini")),
+    }
+    monkeypatch.setattr(llm, "_client_for", lambda name: clients[name])
+    monkeypatch.setenv("LLM_PROVIDERS", "gemini,groq")
+    assert llm.chat([], step="test").content == "from gemini"
