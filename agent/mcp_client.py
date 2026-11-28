@@ -22,7 +22,6 @@ def stdio_server() -> StdioServerParameters:
         command=sys.executable, args=["-m", "mcp_server.server"], env=dict(os.environ)
     )
 
-
 class MCPToolClient:
     def __init__(self, server=None, connect_timeout: float = 120):
         """`server` is anything mcp.Client accepts: stdio params (default) or, in tests, an
@@ -72,7 +71,6 @@ class MCPToolClient:
                 }
             )
         return specs
-
     def call_tool(self, name: str, arguments: dict, timeout: float = 120) -> str:
         """Call a tool and return its result as text (JSON). Errors come back as
         {"error": ...} so the model can read them and recover."""
@@ -86,7 +84,6 @@ class MCPToolClient:
         if result.structured_content is not None:
             return json.dumps(result.structured_content, default=str)
         return text
-
     def close(self) -> None:
         if self._stop is not None:
             self._loop.call_soon_threadsafe(self._stop.set)
