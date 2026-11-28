@@ -23,7 +23,6 @@ from core.store import Store
 
 ALLOWED_SUFFIXES = IMAGE_TYPES | {".pdf"}
 
-
 def build_server(pipeline: ReceiptPipeline, upload_dir: Path) -> MCPServer:
     server = MCPServer(
         "receipt-tools",
@@ -65,7 +64,6 @@ def build_server(pipeline: ReceiptPipeline, upload_dir: Path) -> MCPServer:
 
     return server
 
-
 @contextmanager
 def _expected_errors():
     """Our ValueErrors (bad file, rejected correction, unknown doc id) are messages for the
@@ -84,7 +82,6 @@ def _uploaded_file(upload_dir: Path, file_name: str) -> Path:
     if not path.is_file():
         raise ValueError(f"No uploaded file named {path.name!r}.")
     return path
-
 
 def main() -> None:
     load_dotenv()
