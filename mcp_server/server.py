@@ -1,7 +1,6 @@
 """MCP server exposing the receipt tools to the agent.
 
 Run standalone (stdio transport):  python -m mcp_server.server
-
 Security design: there is no "post" or "approve" tool. Posting only happens inside the
 pipeline when validation passes, so a prompt-injected agent has nothing to call that
 would push a bad record into the ledger. File access is limited to the upload folder.
@@ -72,7 +71,6 @@ def _expected_errors():
         yield
     except ValueError as e:
         raise ToolError(str(e)) from e
-
 
 def _uploaded_file(upload_dir: Path, file_name: str) -> Path:
     # Path(...).name drops any directory part, so "../../.env" becomes ".env" -> rejected below.
