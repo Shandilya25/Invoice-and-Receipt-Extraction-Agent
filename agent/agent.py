@@ -34,7 +34,6 @@ Tools: process_document, get_document, list_documents, correct_field.
 - Be brief and concrete.
 """
 
-
 class Agent:
     def __init__(
         self,
@@ -93,7 +92,6 @@ class Agent:
             result = self.tools.call_tool(name, args)
             t["ok"] = not result.startswith('{"error"')
         return wrap_untrusted(result, source="tool")
-
 
 def _assistant_turn(msg) -> dict:
     calls = []
